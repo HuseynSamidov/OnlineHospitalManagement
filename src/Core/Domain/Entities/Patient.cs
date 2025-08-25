@@ -1,0 +1,21 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Domain.Entities;
+
+public class Patient : BaseEntity
+{
+    public Guid AppUserId { get; set; }
+    public AppUser AppUser { get; set; }
+
+    public DateTime DateOfBirth { get; set; }
+    public string Gender { get; set; }
+    public int MissedTurns { get; set; } = 0; // neçə dəfə növbəsini qaçırıb
+    public DateTime? BlockedUntil { get; set; } // 3 dəfə qaçırsa, 1 həftəlik blok tarixi
+
+    // Relations
+    public ICollection<QueueTicket> QueueTickets { get; set; }
+}
