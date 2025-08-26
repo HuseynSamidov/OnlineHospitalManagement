@@ -11,10 +11,12 @@ public class Doctor : BaseEntity
     public Guid AppUserId { get; set; }
     public AppUser AppUser { get; set; }
 
-    public string Specialization { get; set; }
-    public int ExperienceYears { get; set; }
+    // Həkim yalnız bir Department-ə bağlı ola bilər
+    public Guid DepartmentId { get; set; }
+    public Department Department { get; set; }
 
-    // Relations
-    public ICollection<Service> Services { get; set; }
+    public string Specialization { get; set; }
+
+    public ICollection<MedicalService> MedicalServices { get; set; }
     public ICollection<QueueTicket> QueueTickets { get; set; }
 }

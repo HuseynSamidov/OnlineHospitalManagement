@@ -16,7 +16,7 @@ public class QueueTicket : BaseEntity
     public Doctor Doctor { get; set; }
 
     public Guid ServiceId { get; set; }
-    public Service Service { get; set; }
+    public MedicalService Service { get; set; }
 
     public int Number { get; set; } // Sıradakı nömrəsi
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

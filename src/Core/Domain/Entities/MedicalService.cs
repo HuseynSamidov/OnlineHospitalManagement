@@ -6,11 +6,14 @@ using System.Threading.Tasks;
 
 namespace Domain.Entities;
 
-public class ServiceCategory : BaseEntity
+public class MedicalService : BaseEntity
 {
     public string Name { get; set; }
     public string Description { get; set; }
 
+    public Guid ServiceCategoryId { get; set; }
+    public Department ServiceCategory { get; set; }
+
     // Relations
-    public ICollection<Service> Services { get; set; }
+    public ICollection<Doctor> Doctors { get; set; }
 }
