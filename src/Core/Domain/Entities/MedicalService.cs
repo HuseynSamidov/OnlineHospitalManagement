@@ -15,5 +15,6 @@ public class MedicalService : BaseEntity
     public Department ServiceCategory { get; set; }
 
     // Relations
+    public ICollection<QueueTicket> QueueTickets { get; set; }
     public ICollection<Doctor> Doctors { get; set; }
 }
