@@ -8,10 +8,13 @@
 
   <ItemGroup>
     <Folder Include="Abstracts\Services\" />
-    <Folder Include="Abstracts\Repositories\" />
     <Folder Include="DTOs\" />
     <Folder Include="Shared\" />
     <Folder Include="Validations\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Domain\Domain.csproj" />
   </ItemGroup>
 
 </Project>
