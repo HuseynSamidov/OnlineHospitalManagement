@@ -18,9 +18,9 @@ public class MedicalServiceConfiguration : IEntityTypeConfiguration<MedicalServi
                .HasMaxLength(500);
 
         // Many-to-one: MedicalService -> Department
-        builder.HasOne(ms => ms.ServiceCategory)
+        builder.HasOne(ms => ms.Department)
                .WithMany(d => d.MedicalService)
-               .HasForeignKey(ms => ms.ServiceCategoryId)
+               .HasForeignKey(ms => ms.DepartmentId)
                .OnDelete(DeleteBehavior.Restrict);
 
         // Many-to-many: MedicalService <-> Doctor
