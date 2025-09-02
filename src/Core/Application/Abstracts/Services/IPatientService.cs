@@ -1,4 +1,5 @@
-﻿using Domain.Entities;
+﻿using Application.DTOs.PatientDTOs;
+using Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,8 +12,8 @@ public interface IPatientService
 {
     Task<Patient?> GetByIdAsync(Guid id);
     Task<List<Patient>> GetAllAsync();  
-    Task<Patient> CreateAsync(Patient patient);
-    Task<Patient> UpdateAsync(Patient patient);
+    Task<Patient> CreateAsync(RegisterPatientDTO dto);
+    Task<Patient> UpdateAsync(UpdatePatientDTO dto);
     Task<bool> DeleteAsync(Guid id);
 
     Task<Patient?> GetPatientWithTicketsAsync(Guid id);

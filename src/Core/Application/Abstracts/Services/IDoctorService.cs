@@ -12,8 +12,8 @@ public interface IDoctorService
     // CRUD metodları
     Task<Doctor?> GetByIdAsync(Guid id);
     Task<List<Doctor>> GetAllAsync();
-    Task<Doctor> CreateAsync(Doctor doctor);
-    Task<Doctor> UpdateAsync(Doctor doctor);
+    Task<Doctor> CreateAsync();
+    Task<Doctor> UpdateAsync();
     Task<bool> DeleteAsync(Guid id);
     /// Verilmiş department-ə aid olan bütün həkimləri gətirir
     Task<List<Doctor>> GetDoctorsByDepartmentAsync(Guid departmentId);
