@@ -1,4 +1,5 @@
-﻿using Domain.Entities;
+﻿using Application.DTOs.DoctorDTOs;
+using Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,8 +13,8 @@ public interface IDoctorService
     // CRUD metodları
     Task<Doctor?> GetByIdAsync(Guid id);
     Task<List<Doctor>> GetAllAsync();
-    Task<Doctor> CreateAsync();
-    Task<Doctor> UpdateAsync();
+    Task<Doctor> CreateAsync(CreateDoctorDTO dto);
+    Task<Doctor> UpdateAsync(UpdateDoctorDTO dto);
     Task<bool> DeleteAsync(Guid id);
     /// Verilmiş department-ə aid olan bütün həkimləri gətirir
     Task<List<Doctor>> GetDoctorsByDepartmentAsync(Guid departmentId);
