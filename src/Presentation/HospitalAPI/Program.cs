@@ -1,3 +1,6 @@
+using Application.Shared.Settings;
+using Domain.Entities;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Persistence;
 using Persistence.Context;
@@ -17,7 +20,28 @@ builder.Services.AddSwaggerGen();
  builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
 
+
+builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
+{
+    options.Password.RequiredLength = 8;
+    options.User.RequireUniqueEmail = true;
+    options.Lockout.AllowedForNewUsers = true;
+    options.Lockout.MaxFailedAccessAttempts = 3;
+})
+    .AddEntityFrameworkStores<AppDbContext>()
+    .AddDefaultTokenProviders();
+
+builder.Services.Configure<JWTSettings>(builder.Configuration.GetSection("JWTSettings"));
+
+var jwtSettings = builder.Configuration.GetSection("JWTSettings").Get<JWTSettings>();
+
+
+
 builder.Services.RegisterService();
+
+
+
+
 
 
 var app = builder.Build();
