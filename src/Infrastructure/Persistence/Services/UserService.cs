@@ -172,16 +172,56 @@ public class UserService : IUserService
 
         return new BaseResponse<string>("User updated successfully", HttpStatusCode.OK);
     }
-
-    public Task<BaseResponse<UserProfileDto>> GetByIdAsync(string id)
+    public async Task<BaseResponse<UserProfileDto>> GetByIdAsync(string id)
     {
-        throw new NotImplementedException();
+        var user = await _userManager.FindByIdAsync(id);
+
+        if (user == null)
+            return new BaseResponse<UserProfileDto>("User not found", HttpStatusCode.NotFound);
+
+        var roles = await _userManager.GetRolesAsync(user);
+
+        var dto = new UserProfileDto
+        {
+            Id = user.Id,
+            FullName = user.FullName,
+            Email = user.Email!,
+            Role = roles.FirstOrDefault() ?? "NoRole",
+            IsActive = user.LockoutEnd == null || user.LockoutEnd <= DateTimeOffset.Now
+        };
+
+        return new BaseResponse<UserProfileDto>(
+            "User profile retrieved successfully",
+            dto,
+            HttpStatusCode.OK
+        );
     }
 
-    public Task<BaseResponse<List<UserProfileDto>>> GetAllAsync()
+    public async Task<BaseResponse<List<UserProfileDto>>> GetAllAsync()
     {
-        throw new NotImplementedException();
+        var users = await _userManager.Users.ToListAsync();
+        var result = new List<UserProfileDto>();
+
+        foreach (var user in users)
+        {
+            var roles = await _userManager.GetRolesAsync(user);
+            result.Add(new UserProfileDto
+            {
+                Id = user.Id,
+                FullName = user.FullName,
+                Email = user.Email!,
+                Role = roles.FirstOrDefault() ?? "NoRole",
+                IsActive = user.LockoutEnd == null || user.LockoutEnd <= DateTimeOffset.Now
+            });
+        }
+
+        return new BaseResponse<List<UserProfileDto>>(
+            "All profiles retrieved successfully",
+            result,
+            HttpStatusCode.OK
+        );
     }
+
 
 
     public Task<BaseResponse<string>> AddRoleAsync(UserAddRoleDto dto)
@@ -190,14 +230,73 @@ public class UserService : IUserService
     }
 
 
-    public Task<BaseResponse<TokenResponse>> RefreshTokenAsync(RefreshTokenRequestDto request)
+    public async Task<BaseResponse<TokenResponse>> RefreshTokenAsync(RefreshTokenRequestDto request)
     {
-        throw new NotImplementedException();
+        var principal = GetPrincipalFromExpiredToken(request.AccessToken);
+        if (principal == null)
+            return new BaseResponse<TokenResponse>("Invalid access token", HttpStatusCode.Unauthorized);
+
+        var userEmail = principal.FindFirst(ClaimTypes.Email)?.Value;
+        if (userEmail == null)
+            return new BaseResponse<TokenResponse>("Invalid token claims", HttpStatusCode.Unauthorized);
+
+        var user = await _userManager.FindByEmailAsync(userEmail);
+        if (user == null)
+            return new BaseResponse<TokenResponse>("User not found", HttpStatusCode.NotFound);
+
+        if (user.RefreshToken != request.RefreshToken || user.RefreshTokenExpiryTime <= DateTime.UtcNow)
+            return new BaseResponse<TokenResponse>("Invalid refresh token", HttpStatusCode.Unauthorized);
+
+        // Yeni JWT və RefreshToken yaradılır
+        var newToken = await GenerateJwtToken(user);
+
+        return new BaseResponse<TokenResponse>("Token refreshed successfully", newToken, HttpStatusCode.OK);
     }
 
-    public Task<BaseResponse<TokenResponse>> ResetPasswordAsync(UserResetPasswordDto dto)
+
+    public async Task<BaseResponse<TokenResponse>> ResetPasswordAsync(UserResetPasswordDto dto)
     {
-        throw new NotImplementedException();
+        // 1. Parolların uyğunluğunu yoxla
+        if (dto.NewPassword != dto.ConfirmPassword)
+            return new BaseResponse<TokenResponse>("Passwords do not match", HttpStatusCode.BadRequest);
+
+        // 2. İstifadəçini tap
+        var user = await _userManager.FindByEmailAsync(dto.Email);
+        if (user is null)
+            return new BaseResponse<TokenResponse>("User not found", HttpStatusCode.NotFound);
+
+        // 3. Şifrəni yenilə
+        var result = await _userManager.ResetPasswordAsync(user, dto.Token, dto.NewPassword);
+
+        if (!result.Succeeded)
+        {
+            var errors = string.Join("; ", result.Errors.Select(e => e.Description));
+            return new BaseResponse<TokenResponse>($"Password reset failed: {errors}", HttpStatusCode.BadRequest);
+        }
+
+        // 4. Uğurlu olduqda yeni token qaytar
+        var tokenResponse = await GenerateJwtToken(user);
+
+        return new BaseResponse<TokenResponse>("Password reset successfully", tokenResponse, HttpStatusCode.OK);
+    }
+
+    public async Task<BaseResponse<string>> ForgotPasswordAsync(ForgotPasswordDto dto)
+    {
+        // 1. User tap
+        var user = await _userManager.FindByEmailAsync(dto.Email);
+        if (user is null)
+            return new BaseResponse<string>("User not found", HttpStatusCode.NotFound);
+
+        // 2. Token yarat
+        var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
+
+        // 3. Link formalaşdır (indi test üçün console-a)
+        var resetLink = $"https://localhost:7046/api/Users/ResetPassword?email={dto.Email}&token={HttpUtility.UrlEncode(resetToken)}";
+
+        Console.WriteLine("Password reset link: " + resetLink);
+
+        // 4. Geri dönüş
+        return new BaseResponse<string>("Password reset link generated successfully", HttpStatusCode.OK);
     }
 
 
@@ -273,7 +372,40 @@ public class UserService : IUserService
         rng.GetBytes(randomBytes);
         return Convert.ToBase64String(randomBytes);
     }
+
+    private ClaimsPrincipal? GetPrincipalFromExpiredToken(string token)
+    {
+        var tokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateAudience = true,
+            ValidateIssuer = true,
+            ValidateIssuerSigningKey = true,
+            ValidateLifetime = false, // !!! expiry yoxlanmasın deyə false qoyuruq
+            ValidIssuer = _jwtSettings.Issuer,
+            ValidAudience = _jwtSettings.Audience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.SecretKey))
+        };
+
+        var tokenHandler = new JwtSecurityTokenHandler();
+        try
+        {
+            var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out var securityToken);
+
+            if (securityToken is not JwtSecurityToken jwtSecurityToken ||
+                !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
+            {
+                throw new SecurityTokenException("Invalid token");
+            }
+
+            return principal;
+        }
+        catch
+        {
+            return null;
+        }
+    }
     #endregion
+
 
 
 }
