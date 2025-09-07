@@ -35,6 +35,7 @@ builder.Services.Configure<JWTSettings>(builder.Configuration.GetSection("JWTSet
 
 var jwtSettings = builder.Configuration.GetSection("JWTSettings").Get<JWTSettings>();
 
+builder.Services.AddHttpContextAccessor();
 
 
 builder.Services.RegisterService();

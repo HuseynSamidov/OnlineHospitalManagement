@@ -3,6 +3,7 @@ using Application.DTOs.UserDTOs;
 using Application.Shared;
 using Application.Shared.Settings;
 using Domain.Entities;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -24,12 +25,14 @@ public class UserService : IUserService
     private readonly RoleManager<IdentityRole> _roleManager;
     private readonly JWTSettings _jwtSettings;
     private readonly AppDbContext _context;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
     public UserService(
         UserManager<AppUser> userManager,
         SignInManager<AppUser> signInManager,
         RoleManager<IdentityRole> roleManager,
           AppDbContext context,
+          IHttpContextAccessor httpContextAccessor,
         IOptions<JWTSettings> jwtSettings)
     {
         _userManager = userManager;
@@ -37,6 +40,7 @@ public class UserService : IUserService
         _roleManager = roleManager;
         _jwtSettings = jwtSettings.Value;
         _context = context;
+        _httpContextAccessor = httpContextAccessor;
     }
 
     public async Task<BaseResponse<TokenResponse>> RegisterAsync(RegisterDto dto)
@@ -62,43 +66,23 @@ public class UserService : IUserService
             return new BaseResponse<TokenResponse>($"User creation failed: {errors}", HttpStatusCode.BadRequest);
         }
 
-        // 3. Role əlavə edilir (Patient/Doctor)
-        var roleName = dto.Role;
+        // 3. İstifadəçiyə "Patient" rolu verilir
+        const string roleName = "Patient";
         if (!await _roleManager.RoleExistsAsync(roleName))
             await _roleManager.CreateAsync(new IdentityRole(roleName));
 
         await _userManager.AddToRoleAsync(newUser, roleName);
 
-        // 4. Əlavə məlumatlar Patient/Doctor üçün
-        if (roleName.Equals("Patient", StringComparison.OrdinalIgnoreCase))
+        // 4. Patient məlumatı əlavə olunur
+        var patient = new Patient
         {
-            var patient = new Patient
-            {
-                AppUserId = newUser.Id,
-                DateOfBirth = dto.DateOfBirth!.Value,
-                Gender = dto.Gender!,
-                MissedTurns = 0
-            };
-            // DbContext istifadə edərək save
-            _context.Patients.Add(patient);
-            await _context.SaveChangesAsync();
-        }
-        else if (roleName.Equals("Doctor", StringComparison.OrdinalIgnoreCase))
-        {
-            if (!dto.DepartmentId.HasValue)
-            {
-                throw new ArgumentException("Department seçilməlidir");
-            }
-
-            var doctor = new Doctor
-            {
-                AppUserId = newUser.Id,
-                Specialization = dto.Specialization!,
-                DepartmentId = dto.DepartmentId.Value   
-            };
-            _context.Doctors.Add(doctor);
-            await _context.SaveChangesAsync();
-        }
+            AppUserId = newUser.Id,
+            DateOfBirth = dto.DateOfBirth,
+            Gender = dto.Gender,
+            MissedTurns = 0
+        };
+        _context.Patients.Add(patient);
+        await _context.SaveChangesAsync();
 
         // 5. Email təsdiqi linki (SMTP ilə sonradan göndəriləcək)
         var emailToken = await _userManager.GenerateEmailConfirmationTokenAsync(newUser);
@@ -111,21 +95,82 @@ public class UserService : IUserService
 
         return new BaseResponse<TokenResponse>("User registered successfully", tokenResponse, HttpStatusCode.Created);
     }
-
-
-    public Task<BaseResponse<TokenResponse>> LoginAsync(LoginDto dto)
+    public async Task<BaseResponse<TokenResponse>> LoginAsync(LoginDto dto)
     {
-        throw new NotImplementedException();
+        // 1. İstifadəçi mövcuddurmu
+        var user = await _userManager.FindByEmailAsync(dto.Email);
+        if (user == null)
+            return new BaseResponse<TokenResponse>("Invalid email or password", HttpStatusCode.Unauthorized);
+
+        // 2. Parol yoxlanılır
+        var result = await _signInManager.CheckPasswordSignInAsync(user, dto.Password, false);
+        if (!result.Succeeded)
+            return new BaseResponse<TokenResponse>("Invalid email or password", HttpStatusCode.Unauthorized);
+
+        // 3. Email təsdiqlənməyibsə (əgər şərt qoymaq istəsən)
+        if (!user.EmailConfirmed)
+        {
+            return new BaseResponse<TokenResponse>("Please confirm your email before logging in", HttpStatusCode.Forbidden);
+        }
+
+        // 4. JWT token yaradılır
+        var tokenResponse = await GenerateJwtToken(user);
+
+        return new BaseResponse<TokenResponse>("Login successful", tokenResponse, HttpStatusCode.OK);
     }
-
-    public Task<BaseResponse<string>> ConfirmEmailAsync(string userId, string token)
+    public async Task<BaseResponse<string>> ConfirmEmailAsync(string userId, string token)
     {
-        throw new NotImplementedException();
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user == null)
+            return new BaseResponse<string>("User not found", HttpStatusCode.NotFound);
+
+        var result = await _userManager.ConfirmEmailAsync(user, token);
+        if (!result.Succeeded)
+        {
+            var errors = string.Join("; ", result.Errors.Select(e => e.Description));
+            return new BaseResponse<string>($"Email confirmation failed: {errors}", HttpStatusCode.BadRequest);
+        }
+
+        return new BaseResponse<string>("Email confirmed successfully", HttpStatusCode.OK);
     }
-
-    public Task<BaseResponse<string>> UpdateUserAsync(UpdateDto dto)
+    public async Task<BaseResponse<string>> UpdateUserAsync(UpdateDto dto)
     {
-        throw new NotImplementedException();
+        var user = await _userManager.GetUserAsync(_httpContextAccessor.HttpContext!.User);
+        if (user == null)
+            return new BaseResponse<string>("User not found", HttpStatusCode.NotFound);
+
+        // FullName dəyiş
+        user.FullName = dto.FullName;
+
+        // Email dəyiş
+        if (!string.IsNullOrWhiteSpace(dto.Email))
+            user.Email = dto.Email;
+
+        // PhoneNumber dəyiş
+        if (!string.IsNullOrWhiteSpace(dto.PhoneNumber))
+            user.PhoneNumber = dto.PhoneNumber;
+
+        // Password dəyiş (təhlükəsizlik baxımından əslində köhnə parol da soruşulmalı idi)
+        if (!string.IsNullOrWhiteSpace(dto.Password))
+        {
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var passResult = await _userManager.ResetPasswordAsync(user, token, dto.Password);
+
+            if (!passResult.Succeeded)
+            {
+                var errors = string.Join("; ", passResult.Errors.Select(e => e.Description));
+                return new BaseResponse<string>($"Password update failed: {errors}", HttpStatusCode.BadRequest);
+            }
+        }
+
+        var updateResult = await _userManager.UpdateAsync(user);
+        if (!updateResult.Succeeded)
+        {
+            var errors = string.Join("; ", updateResult.Errors.Select(e => e.Description));
+            return new BaseResponse<string>($"Update failed: {errors}", HttpStatusCode.BadRequest);
+        }
+
+        return new BaseResponse<string>("User updated successfully", HttpStatusCode.OK);
     }
 
     public Task<BaseResponse<UserProfileDto>> GetByIdAsync(string id)
