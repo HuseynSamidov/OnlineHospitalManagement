@@ -1,6 +1,8 @@
 ﻿using Application.Abstracts.Repositories;
+using Application.Abstracts.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Persistence.Repositories;
+using Persistence.Services;
 
 namespace Persistence;
 
@@ -16,7 +18,7 @@ public static class RegistrationClass
         #endregion
 
         #region Service
-
+        services.AddScoped<IUserService,UserService>();
         #endregion
 
 

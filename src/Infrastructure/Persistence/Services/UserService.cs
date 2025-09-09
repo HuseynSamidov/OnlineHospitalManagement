@@ -108,10 +108,10 @@ public class UserService : IUserService
             return new BaseResponse<TokenResponse>("Invalid email or password", HttpStatusCode.Unauthorized);
 
         // 3. Email təsdiqlənməyibsə (əgər şərt qoymaq istəsən)
-        if (!user.EmailConfirmed)
-        {
-            return new BaseResponse<TokenResponse>("Please confirm your email before logging in", HttpStatusCode.Forbidden);
-        }
+        //if (!user.EmailConfirmed)
+        //{
+        //    return new BaseResponse<TokenResponse>("Please confirm your email before logging in", HttpStatusCode.Forbidden);
+        //}
 
         // 4. JWT token yaradılır
         var tokenResponse = await GenerateJwtToken(user);
@@ -196,7 +196,6 @@ public class UserService : IUserService
             HttpStatusCode.OK
         );
     }
-
     public async Task<BaseResponse<List<UserProfileDto>>> GetAllAsync()
     {
         var users = await _userManager.Users.ToListAsync();
@@ -252,8 +251,6 @@ public class UserService : IUserService
 
         return new BaseResponse<TokenResponse>("Token refreshed successfully", newToken, HttpStatusCode.OK);
     }
-
-
     public async Task<BaseResponse<TokenResponse>> ResetPasswordAsync(UserResetPasswordDto dto)
     {
         // 1. Parolların uyğunluğunu yoxla
@@ -279,7 +276,6 @@ public class UserService : IUserService
 
         return new BaseResponse<TokenResponse>("Password reset successfully", tokenResponse, HttpStatusCode.OK);
     }
-
     public async Task<BaseResponse<string>> ForgotPasswordAsync(ForgotPasswordDto dto)
     {
         // 1. User tap
@@ -300,7 +296,7 @@ public class UserService : IUserService
     }
 
 
-    #region Tokens
+    #region Privates
     private async Task<TokenResponse> GenerateJwtToken(AppUser user)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
