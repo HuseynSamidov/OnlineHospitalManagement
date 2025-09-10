@@ -1,19 +1,20 @@
-﻿using Domain.Entities;
-using Domain.Enums;
+﻿using Application.DTOs.QueueTicketDTOs;
+using Application.Shared;
 
 namespace Application.Abstracts.Services;
 
 public interface IQueueTicketService
 {
-    Task<QueueTicket?> GetByIdAsync(Guid id);
-    Task<QueueTicket> CreateAsync(Guid patientId, Guid medicalServiceId);
+    Task<BaseResponse<QueueTicketGetDto>> GetByIdAsync(Guid id);
+    Task<BaseResponse<QueueTicketGetDto>> CreateAsync(QueueTicketCreateDto dto);
 
-    Task<bool> UpdateStatusAsync(Guid ticketId, QueueStatus newStatus);
-    Task ProcessMissedTicketAsync(Guid ticketId);
-    Task<IEnumerable<QueueTicket>> GetByPatientIdAsync(Guid patientId);
+    Task<BaseResponse<bool>> UpdateStatusAsync(QueueTicketUpdateStatusDto dto);
+    Task<BaseResponse<bool>> ProcessMissedTicketAsync(Guid ticketId);
 
-    Task<IEnumerable<QueueTicket>> GetByMedicalServiceIdAsync(Guid medicalServiceId);
+    Task<BaseResponse<IEnumerable<QueueTicketGetDto>>> GetByPatientIdAsync(Guid patientId);
+    Task<BaseResponse<IEnumerable<QueueTicketGetDto>>> GetByMedicalServiceIdAsync(Guid medicalServiceId);
 
     // Aktiv ticket-lər (Waiting və Called olanlar)
-    Task<IEnumerable<QueueTicket>> GetActiveTicketsAsync();
+    Task<BaseResponse<IEnumerable<QueueTicketGetDto>>> GetActiveTicketsAsync();
 }
+
