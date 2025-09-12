@@ -1,18 +1,16 @@
 using Application.Shared.Settings;
 using Domain.Entities;
+using Hangfire;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Persistence;
 using Persistence.Context;
-using System;
 
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -41,8 +39,12 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.RegisterService();
 
 
+#region Hangfire
+builder.Services.AddHangfire(x =>
+    x.UseSqlServerStorage(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddHangfireServer();
 
-
+#endregion
 
 
 var app = builder.Build();
@@ -53,6 +55,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseHangfireDashboard();
 
 app.UseHttpsRedirection();
 

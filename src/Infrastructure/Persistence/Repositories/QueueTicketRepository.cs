@@ -20,36 +20,56 @@ namespace Persistence.Repositories
             _context = context;
         }
 
-        // Xüsusi metod: Xəstənin aktiv növbəsini gətir
         public async Task<QueueTicket?> GetActiveTicketByPatientAsync(Guid patientId, bool isTracking = false)
         {
-            var query = _context.QueueTickets
-                .Include(q => q.Doctor)
-                .Include(q => q.Patient)
-                .Include(q => q.Service)
-                .Where(q => q.PatientId == patientId && q.Status == QueueStatus.Waiting);
-
+            var query = _context.QueueTickets.AsQueryable();
             if (!isTracking)
                 query = query.AsNoTracking();
 
-            return await query.FirstOrDefaultAsync();
+            return await query
+                .FirstOrDefaultAsync(q => q.PatientId == patientId
+                                       && (q.Status == QueueStatus.Waiting || q.Status == QueueStatus.Called));
         }
 
-        // Xüsusi metod: Həkimin növbələrini status üzrə gətir
         public async Task<List<QueueTicket>> GetTicketsByDoctorAsync(Guid doctorId, QueueStatus? status = null, bool isTracking = false)
         {
-            var query = _context.QueueTickets
-                .Include(q => q.Patient)
-                .Include(q => q.Service)
-                .Where(q => q.DoctorId == doctorId);
-
-            if (status.HasValue)
-                query = query.Where(q => q.Status == status.Value);
-
+            var query = _context.QueueTickets.AsQueryable();
             if (!isTracking)
                 query = query.AsNoTracking();
+
+            if (status.HasValue)
+                query = query.Where(q => q.DoctorId == doctorId && q.Status == status.Value);
+            else
+                query = query.Where(q => q.DoctorId == doctorId);
+
+            return await query.ToListAsync();
+        }
+
+        public async Task<QueueTicket?> GetLastTicketByServiceAsync(Guid serviceId, bool isTracking = false)
+        {
+            var query = _context.QueueTickets.AsQueryable();
+            if (!isTracking)
+                query = query.AsNoTracking();
+
+            return await query
+                .Where(q => q.ServiceId == serviceId)
+                .OrderByDescending(q => q.ScheduledAt)
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<List<QueueTicket>> GetTicketsByServiceAsync(Guid serviceId, QueueStatus? status = null, bool isTracking = false)
+        {
+            var query = _context.QueueTickets.AsQueryable();
+            if (!isTracking)
+                query = query.AsNoTracking();
+
+            if (status.HasValue)
+                query = query.Where(q => q.ServiceId == serviceId && q.Status == status.Value);
+            else
+                query = query.Where(q => q.ServiceId == serviceId);
 
             return await query.ToListAsync();
         }
     }
+
 }

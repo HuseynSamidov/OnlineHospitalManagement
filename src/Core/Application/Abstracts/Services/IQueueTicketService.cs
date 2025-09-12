@@ -9,7 +9,7 @@ public interface IQueueTicketService
     Task<BaseResponse<QueueTicketGetDto>> CreateAsync(QueueTicketCreateDto dto);
 
     Task<BaseResponse<bool>> UpdateStatusAsync(QueueTicketUpdateStatusDto dto);
-    Task<BaseResponse<bool>> ProcessMissedTicketAsync(Guid ticketId);
+    Task ProcessMissedTicketAsync(Guid ticketId);
 
     Task<BaseResponse<IEnumerable<QueueTicketGetDto>>> GetByPatientIdAsync(Guid patientId);
     Task<BaseResponse<IEnumerable<QueueTicketGetDto>>> GetByMedicalServiceIdAsync(Guid medicalServiceId);

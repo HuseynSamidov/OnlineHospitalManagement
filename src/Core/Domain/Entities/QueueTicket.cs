@@ -20,6 +20,7 @@ public class QueueTicket : BaseEntity
 
     public int Number { get; set; } // Sıradakı nömrəsi
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime ScheduledAt { get; set; } //ne zaman pasient daxil olmalidir
     public QueueStatus Status { get; set; } = QueueStatus.Waiting; // Waiting, Called, Missed, Completed
 }
 
