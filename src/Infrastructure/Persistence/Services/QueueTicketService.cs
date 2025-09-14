@@ -48,13 +48,22 @@ public class QueueTicketService : IQueueTicketService
     {
         var patient = await _patientRepository.GetByIdAsync(dto.PatientId);
         if (patient == null)
-            return new BaseResponse<QueueTicketGetDto>("Patient not found", HttpStatusCode.NotFound);
+            return new BaseResponse<QueueTicketGetDto>("Patient not found", null, HttpStatusCode.NotFound);
+
+        // 🔒 Bloklama yoxlaması
+        if (patient.BlockedUntil.HasValue && patient.BlockedUntil > DateTime.UtcNow)
+        {
+            return new BaseResponse<QueueTicketGetDto>(
+                $"Patient is blocked until {patient.BlockedUntil.Value:yyyy-MM-dd HH:mm}",
+                null,
+                HttpStatusCode.Forbidden
+            );
+        }
 
         var service = await _medicalServiceRepository.GetByIdAsync(dto.MedicalServiceId);
         if (service == null)
-            return new BaseResponse<QueueTicketGetDto>("Service not found", HttpStatusCode.NotFound);
+            return new BaseResponse<QueueTicketGetDto>("Service not found", null, HttpStatusCode.NotFound);
 
-        // Son ticket-i tap
         var lastTicket = await _queueTicketRepository.GetLastTicketByServiceAsync(dto.MedicalServiceId);
         DateTime scheduledAt = lastTicket == null
             ? DateTime.UtcNow
@@ -71,25 +80,24 @@ public class QueueTicketService : IQueueTicketService
             Status = QueueStatus.Waiting
         };
 
-        await _queueTicketRepository.AddAsync(ticket);      
+        await _queueTicketRepository.AddAsync(ticket);
         await _queueTicketRepository.SaveChangeAsync();
 
-        // Hangfire ilə 30 dəq sonra yoxlama
+        // Hangfire task
         BackgroundJob.Schedule<IQueueTicketService>(
             x => x.ProcessMissedTicketAsync(ticket.Id),
-            TimeSpan.FromMinutes(30)
+            scheduledAt.AddMinutes(30) - DateTime.UtcNow
         );
 
         var result = new QueueTicketGetDto(
-            ticket.Id,
-            ticket.PatientId,
-            ticket.ServiceId,
-            ticket.Status,
-            ticket.ScheduledAt,
-            ticket.Number
+            ticket.Id, ticket.PatientId, ticket.ServiceId, ticket.Status, ticket.CreatedAt,ticket.Number
         );
 
-        return new BaseResponse<QueueTicketGetDto>("Ticket created successfully", result, HttpStatusCode.OK);
+        return new BaseResponse<QueueTicketGetDto>(
+            "Ticket created successfully",
+            result,
+            HttpStatusCode.OK
+        );
     }
 
     public async Task<BaseResponse<bool>> UpdateStatusAsync(QueueTicketUpdateStatusDto dto)

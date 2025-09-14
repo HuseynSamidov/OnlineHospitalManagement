@@ -19,6 +19,7 @@ public static class RegistrationClass
 
         #region Service
         services.AddScoped<IUserService,UserService>();
+        services.AddScoped<IQueueTicketService,QueueTicketService>();
         #endregion
 
 
