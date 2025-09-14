@@ -7,5 +7,6 @@ Guid Id,
 Guid PatientId,
 Guid MedicalServiceId,
 QueueStatus Status,
-DateTime CreatedAt
+DateTime CreatedAt,
+ int Number
 );

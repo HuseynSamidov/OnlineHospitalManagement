@@ -4,100 +4,99 @@ using Microsoft.EntityFrameworkCore;
 using Persistence.Context;
 using System.Linq.Expressions;
 
-namespace Persistence.Repositories
+namespace Persistence.Repositories;
+
+public class Repository<T> : IRepository<T> where T : BaseEntity, new()
 {
-    public class Repository<T> : IRepository<T> where T : BaseEntity, new()
+    private readonly AppDbContext _context;
+
+    private readonly DbSet<T> Table;
+
+    public Repository(AppDbContext context)
     {
-        private readonly AppDbContext _context;
+        _context = context;
+        Table = _context.Set<T>();
+    }
 
-        private readonly DbSet<T> Table;
+    public async Task AddAsync(T entity)
+    {
+        await Table.AddAsync(entity);
+    }
 
-        public Repository(AppDbContext context)
+    public void Update(T entity)
+    {
+        Table.Update(entity);
+    }
+
+    public void Delete(T entity)
+    {
+        Table.Remove(entity);
+    }
+    public async Task<T?> GetByIdAsync(Guid id)
+    {
+        return await Table.FindAsync(id);
+    }
+
+    public IQueryable<T> GetByFiltered(Expression<Func<T, bool>> predicate,
+        Expression<Func<T, object>>[]? include = null,
+        bool isTracking = false)
+    {
+        IQueryable<T> query = Table;
+        if (predicate is not null)
+            query = query.Where(predicate);
+
+        if (include is not null)
         {
-            _context = context;
-            Table = _context.Set<T>();
+            foreach (var includeExpression in include)
+                query = query.Include(includeExpression);
         }
 
-        public async Task AddAsync(T entity)
+        if (!isTracking)
+            return query.AsNoTracking();
+
+        return query;
+
+    }
+
+    public IQueryable<T> GetAll(bool isTracking = false)
+    {
+        if (!isTracking)
+            return Table.AsNoTracking();
+        return Table;
+    }
+
+
+    public IQueryable<T> GetAllFiltered(Expression<Func<T, bool>> predicate,
+        Expression<Func<T, object>>[]? include = null,
+        Expression<Func<T, object>>? orderby = null,
+        bool isOrderByAsc = true,
+        bool isTracking = false)
+    {
+        IQueryable<T> query = Table;
+        if (predicate is not null)
+            query = query.Where(predicate);
+
+        if (include is not null)
         {
-            await Table.AddAsync(entity);
+            foreach (var includeExpression in include)
+                query = query.Include(includeExpression);
         }
 
-        public void Update(T entity)
+        if (orderby is not null)
         {
-            Table.Update(entity);
+            if (isOrderByAsc)
+                query = query.OrderBy(orderby);
+            else
+                query = query.OrderByDescending(orderby);
         }
 
-        public void Delete(T entity)
-        {
-            Table.Remove(entity);
-        }
-        public async Task<T?> GetByIdAsync(Guid id)
-        {
-            return await Table.FindAsync(id);
-        }
+        if (!isTracking)
+            return query.AsNoTracking();
 
-        public IQueryable<T> GetByFiltered(Expression<Func<T, bool>> predicate,
-            Expression<Func<T, object>>[]? include = null,
-            bool isTracking = false)
-        {
-            IQueryable<T> query = Table;
-            if (predicate is not null)
-                query = query.Where(predicate);
-
-            if (include is not null)
-            {
-                foreach (var includeExpression in include)
-                    query = query.Include(includeExpression);
-            }
-
-            if (!isTracking)
-                return query.AsNoTracking();
-
-            return query;
-
-        }
-
-        public IQueryable<T> GetAll(bool isTracking = false)
-        {
-            if (!isTracking)
-                return Table.AsNoTracking();
-            return Table;
-        }
-
-
-        public IQueryable<T> GetAllFiltered(Expression<Func<T, bool>> predicate,
-            Expression<Func<T, object>>[]? include = null,
-            Expression<Func<T, object>>? orderby = null,
-            bool isOrderByAsc = true,
-            bool isTracking = false)
-        {
-            IQueryable<T> query = Table;
-            if (predicate is not null)
-                query = query.Where(predicate);
-
-            if (include is not null)
-            {
-                foreach (var includeExpression in include)
-                    query = query.Include(includeExpression);
-            }
-
-            if (orderby is not null)
-            {
-                if (isOrderByAsc)
-                    query = query.OrderBy(orderby);
-                else
-                    query = query.OrderByDescending(orderby);
-            }
-
-            if (!isTracking)
-                return query.AsNoTracking();
-
-            return query;
-        }
-        public async Task SaveChangeAsync()
-        {
-            await _context.SaveChangesAsync();
-        }
+        return query;
+    }
+    public async Task SaveChangeAsync()
+    {
+        await _context.SaveChangesAsync();
     }
 }

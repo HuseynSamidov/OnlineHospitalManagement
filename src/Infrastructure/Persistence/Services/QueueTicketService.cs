@@ -6,8 +6,6 @@ using Domain.Entities;
 using Domain.Enums;
 using Hangfire;
 using Microsoft.EntityFrameworkCore;
-using Persistence.Context;
-using Persistence.Repositories;
 using System.Net;
 
 namespace Persistence.Services;
@@ -56,12 +54,8 @@ public class QueueTicketService : IQueueTicketService
         if (service == null)
             return new BaseResponse<QueueTicketGetDto>("Service not found", HttpStatusCode.NotFound);
 
-        // Son ticket-ı tap
-        var lastTicket = (await _queueTicketRepository
-            .GetTicketsByDoctorAsync(service.DoctorId))
-            .OrderByDescending(t => t.ScheduledAt)
-            .FirstOrDefault();
-
+        // Son ticket-i tap
+        var lastTicket = await _queueTicketRepository.GetLastTicketByServiceAsync(dto.MedicalServiceId);
         DateTime scheduledAt = lastTicket == null
             ? DateTime.UtcNow
             : lastTicket.ScheduledAt.AddMinutes(30);
@@ -77,12 +71,13 @@ public class QueueTicketService : IQueueTicketService
             Status = QueueStatus.Waiting
         };
 
-        await _queueTicketRepository.AddAsync(ticket);
+        await _queueTicketRepository.AddAsync(ticket);      
+        await _queueTicketRepository.SaveChangeAsync();
 
-        // Hangfire ilə yoxlama task-ı schedule et (30 dəq sonra)
+        // Hangfire ilə 30 dəq sonra yoxlama
         BackgroundJob.Schedule<IQueueTicketService>(
             x => x.ProcessMissedTicketAsync(ticket.Id),
-            scheduledAt.AddMinutes(30) - DateTime.UtcNow
+            TimeSpan.FromMinutes(30)
         );
 
         var result = new QueueTicketGetDto(
@@ -94,21 +89,18 @@ public class QueueTicketService : IQueueTicketService
             ticket.Number
         );
 
-        return new BaseResponse<QueueTicketGetDto>(
-            "Ticket created successfully",
-            result,
-            HttpStatusCode.OK
-        );
+        return new BaseResponse<QueueTicketGetDto>("Ticket created successfully", result, HttpStatusCode.OK);
     }
 
     public async Task<BaseResponse<bool>> UpdateStatusAsync(QueueTicketUpdateStatusDto dto)
     {
         var ticket = await _queueTicketRepository.GetByIdAsync(dto.TicketId);
         if (ticket is null)
-            return new BaseResponse<bool>("Ticket not found", false, HttpStatusCode.NotFound);
+            return new BaseResponse<bool>("Ticket not found", HttpStatusCode.NotFound);
 
         ticket.Status = dto.NewStatus;
-        await _queueTicketRepository.UpdateAsync(ticket);
+        _queueTicketRepository.Update(ticket);
+        await _queueTicketRepository.SaveChangeAsync();
 
         return new BaseResponse<bool>("Status updated", true, HttpStatusCode.OK);
     }
@@ -122,7 +114,8 @@ public class QueueTicketService : IQueueTicketService
         if (DateTime.UtcNow >= ticket.ScheduledAt.AddMinutes(30))
         {
             ticket.Status = QueueStatus.Missed;
-            await _queueTicketRepository.UpdateAsync(ticket);
+            _queueTicketRepository.Update(ticket);
+            await _queueTicketRepository.SaveChangeAsync();
 
             var patient = await _patientRepository.GetByIdAsync(ticket.PatientId);
             if (patient != null)
@@ -135,14 +128,15 @@ public class QueueTicketService : IQueueTicketService
                     patient.MissedTurns = 0;
                 }
 
-                await _patientRepository.UpdateAsync(patient);
+                _patientRepository.Update(patient);
+                await _patientRepository.SaveChangeAsync();
             }
         }
     }
 
     public async Task<BaseResponse<IEnumerable<QueueTicketGetDto>>> GetByPatientIdAsync(Guid patientId)
     {
-        var tickets = await _queueTicketRepository.GetActiveTicketByPatientAsync(patientId);
+        var tickets = await _queueTicketRepository.GetByFiltered(x => x.PatientId == patientId).ToListAsync();
 
         var result = tickets.Select(t => new QueueTicketGetDto(
             t.Id, t.PatientId, t.ServiceId, t.Status, t.ScheduledAt, t.Number
@@ -164,7 +158,9 @@ public class QueueTicketService : IQueueTicketService
 
     public async Task<BaseResponse<IEnumerable<QueueTicketGetDto>>> GetActiveTicketsAsync()
     {
-        var tickets = await _queueTicketRepository.GetActiveTicketsAsync();
+        var tickets = await _queueTicketRepository.GetByFiltered(
+            t => t.Status == QueueStatus.Waiting || t.Status == QueueStatus.Called
+        ).ToListAsync();
 
         var result = tickets.Select(t => new QueueTicketGetDto(
             t.Id, t.PatientId, t.ServiceId, t.Status, t.ScheduledAt, t.Number
