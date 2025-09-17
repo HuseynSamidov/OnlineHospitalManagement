@@ -78,11 +78,4 @@ public class UserController : ControllerBase
         return StatusCode((int)response.StatusCode, response);
     }
 
-    [HttpPost]
-    [ProducesResponseType(typeof(BaseResponse<TokenResponse>), (int)HttpStatusCode.OK)]
-    public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequestDto dto)
-    {
-        var response = await _userService.RefreshTokenAsync(dto);
-        return StatusCode((int)response.StatusCode, response);
-    }
 }
