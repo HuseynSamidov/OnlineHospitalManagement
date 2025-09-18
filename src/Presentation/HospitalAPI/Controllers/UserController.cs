@@ -1,6 +1,7 @@
 ﻿using Application.Abstracts.Services;
 using Application.DTOs.UserDTOs;
 using Application.Shared;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using System.Threading.Tasks;
@@ -35,6 +36,7 @@ public class UserController : ControllerBase
     }
 
     [HttpPut]
+    [Authorize(Policy = Permissions.User.Update)]
     [ProducesResponseType(typeof(BaseResponse<string>), (int)HttpStatusCode.OK)]
     [ProducesResponseType(typeof(BaseResponse<string>), (int)HttpStatusCode.BadRequest)]
     public async Task<IActionResult> UpdateUser([FromBody] UpdateDto dto)
@@ -44,6 +46,7 @@ public class UserController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Policy = Permissions.User.ResetPassword)]
     [ProducesResponseType(typeof(BaseResponse<string>), (int)HttpStatusCode.OK)]
     [ProducesResponseType(typeof(BaseResponse<string>), (int)HttpStatusCode.BadRequest)]
     public async Task<IActionResult> ResetPassword([FromBody] UserResetPasswordDto dto)
@@ -62,6 +65,7 @@ public class UserController : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [Authorize(Policy = Permissions.User.GetById)]
     [ProducesResponseType(typeof(BaseResponse<UserProfileDto>), (int)HttpStatusCode.OK)]
     [ProducesResponseType(typeof(BaseResponse<string>), (int)HttpStatusCode.NotFound)]
     public async Task<IActionResult> GetUserById(string id)
@@ -71,6 +75,7 @@ public class UserController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize(Policy = Permissions.User.GetAll)]
     [ProducesResponseType(typeof(BaseResponse<List<UserProfileDto>>), (int)HttpStatusCode.OK)]
     public async Task<IActionResult> GetAll()
     {

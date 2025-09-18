@@ -1,5 +1,7 @@
 ﻿using Application.Abstracts.Services;
 using Application.DTOs.QueueTicketDTOs;
+using Application.Shared;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -19,6 +21,7 @@ public class QueueTicketController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Policy = Permissions.QueueTicket.Create)]
     public async Task<IActionResult> CreateAsync([FromBody] QueueTicketCreateDto dto)
     {
         var result = await _queueTicketService.CreateAsync(dto);
@@ -26,13 +29,15 @@ public class QueueTicketController : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [Authorize(Policy = Permissions.QueueTicket.GetDetail)]
     public async Task<IActionResult> GetByIdAsync(Guid id)
     {
         var result = await _queueTicketService.GetByIdAsync(id);
         return StatusCode((int)result.StatusCode, result);
     }
 
-    [HttpPut("status")]
+    [HttpPut("update status")]
+    [Authorize(Policy = Permissions.QueueTicket.Update)]
     public async Task<IActionResult> UpdateStatusAsync([FromBody] QueueTicketUpdateStatusDto dto)
     {
         var result = await _queueTicketService.UpdateStatusAsync(dto);
@@ -40,6 +45,7 @@ public class QueueTicketController : ControllerBase
     }
 
     [HttpGet("patient/{patientId}")]
+    [Authorize(Policy = Permissions.QueueTicket.GetMy)]
     public async Task<IActionResult> GetByPatientIdAsync(Guid patientId)
     {
         var result = await _queueTicketService.GetByPatientIdAsync(patientId);
@@ -47,13 +53,15 @@ public class QueueTicketController : ControllerBase
     }
 
     [HttpGet("service/{serviceId}")]
+    [Authorize(Policy = Permissions.QueueTicket.GetAll)]
     public async Task<IActionResult> GetByMedicalServiceIdAsync(Guid serviceId)
     {
         var result = await _queueTicketService.GetByMedicalServiceIdAsync(serviceId);
         return StatusCode((int)result.StatusCode, result);
     }
 
-    [HttpGet("active")]
+    [HttpGet("active tickets")]
+    [Authorize(Policy = Permissions.QueueTicket.GetAll)]
     public async Task<IActionResult> GetActiveTicketsAsync()
     {
         var result = await _queueTicketService.GetActiveTicketsAsync();

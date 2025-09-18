@@ -53,8 +53,6 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 
-
-
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
 
@@ -99,13 +97,13 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization(options =>
 {
     var allPermissions = PermissionHelper.GetPermissionList();
-
     foreach (var permission in allPermissions)
     {
         options.AddPolicy(permission, policy =>
             policy.RequireClaim("Permission", permission));
     }
 });
+
 
 #endregion
 
