@@ -1,49 +1,34 @@
-﻿using Application.Abstracts.Services;
+﻿namespace Infrastructure.Services;
+
+using Application.Shared;
+using CloudinaryDotNet;
+using CloudinaryDotNet.Actions;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Options;
 
-
-namespace Infrastructure.Services;
-
-public class FileUploadService : IFileUploadServices
+public class FileUploadService
 {
-    private readonly IWebHostEnvironment _env;
+    private readonly Cloudinary _cloudinary;
 
-    public FileUploadService(IWebHostEnvironment env)
+    public FileUploadService(IOptions<CloudinarySettings> config)
     {
-        _env = env;
+        var acc = new Account(
+            config.Value.CloudName,
+            config.Value.ApiKey,
+            config.Value.ApiSecret
+        );
+        _cloudinary = new Cloudinary(acc);
     }
 
     public async Task<string> UploadAsync(IFormFile file)
     {
-        if (file == null)
-            throw new ArgumentNullException(nameof(file), "File is null");
-
-        var webRootPath = _env.WebRootPath;
-        if (string.IsNullOrEmpty(webRootPath))
-            webRootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
-
-        var uploadFolder = Path.Combine(webRootPath, "uploads");
-        if (!Directory.Exists(uploadFolder))
-            Directory.CreateDirectory(uploadFolder);
-
-        var originalFileName = Path.GetFileNameWithoutExtension(file.FileName);
-        var extension = Path.GetExtension(file.FileName);
-        var fileName = $"{originalFileName}{extension}";
-
-        var filePath = Path.Combine(uploadFolder, fileName);
-        int count = 1;
-
-        // Fayl varsa yeni adla davam et
-        while (System.IO.File.Exists(filePath))
+        await using var stream = file.OpenReadStream();
+        var uploadParams = new ImageUploadParams
         {
-            fileName = $"{originalFileName}({count}){extension}";
-            filePath = Path.Combine(uploadFolder, fileName);
-            count++;
-        }
-
-        using var stream = new FileStream(filePath, FileMode.Create);
-        await file.CopyToAsync(stream);
-
-        return $"/uploads/{fileName}";
+            File = new FileDescription(file.FileName, stream),
+            Folder = "myapp" // istəsən öz folder təyin et
+        };
+        var result = await _cloudinary.UploadAsync(uploadParams);
+        return result.SecureUrl.ToString();
     }
 }

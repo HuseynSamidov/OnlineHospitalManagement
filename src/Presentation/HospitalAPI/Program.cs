@@ -71,6 +71,10 @@ builder.Services.Configure<JWTSettings>(builder.Configuration.GetSection("JWTSet
 
 var jwtSettings = builder.Configuration.GetSection("JWTSettings").Get<JWTSettings>();
 
+builder.Services.Configure<CloudinarySettings>(
+    builder.Configuration.GetSection("CloudinarySettings"));
+
+
 builder.Services.AddHttpContextAccessor();
 
 #region Auths

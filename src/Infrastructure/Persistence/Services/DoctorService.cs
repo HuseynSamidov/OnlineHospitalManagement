@@ -40,8 +40,8 @@ public class DoctorService : IDoctorService
             FullName = dto.FullName,
             Gender = dto.Gender,
             DocumentPath = documentPath,
-           // DepartmentId = dto.DepartmentId,
-           // MedicalServiceId = dto.MedicalServiceId,
+            DepartmentId = dto.DepartmentId,
+            MedicalServiceId = dto.MedicalServiceId,
             EmailConfirmed = true
         };
 

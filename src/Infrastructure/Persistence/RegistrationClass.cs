@@ -1,5 +1,6 @@
 ﻿using Application.Abstracts.Repositories;
 using Application.Abstracts.Services;
+using Infrastructure.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Persistence.Repositories;
 using Persistence.Services;
@@ -20,9 +21,8 @@ public static class RegistrationClass
         #region Service
         services.AddScoped<IUserService,UserService>();
         services.AddScoped<IQueueTicketService,QueueTicketService>();
+        services.AddScoped<IDoctorService,DoctorService>();
+        services.AddScoped<FileUploadService>();
         #endregion
-
-
     }
-
 }

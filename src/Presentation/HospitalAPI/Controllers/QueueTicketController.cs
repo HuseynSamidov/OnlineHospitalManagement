@@ -45,7 +45,7 @@ public class QueueTicketController : ControllerBase
     }
 
     [HttpGet("patient/{patientId}")]
-    [Authorize(Policy = Permissions.QueueTicket.GetMy)]
+    [Authorize(Policy = Permissions.QueueTicket.GetDetail)]
     public async Task<IActionResult> GetByPatientIdAsync(Guid patientId)
     {
         var result = await _queueTicketService.GetByPatientIdAsync(patientId);
