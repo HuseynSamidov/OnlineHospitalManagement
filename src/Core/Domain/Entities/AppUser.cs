@@ -11,8 +11,8 @@ public class AppUser : IdentityUser
     public int Age { get; set; }
     public string Gender { get; set; }
 
-    public Guid DepartmentId { get; set; } = null!;
-    public Guid MedicalServiceId { get; set; } = null!;
+    public Guid DepartmentId { get; set; } 
+    public Guid MedicalServiceId { get; set; } 
     public Doctor Doctor { get; set; }
     public Patient Patient { get; set; }
 }

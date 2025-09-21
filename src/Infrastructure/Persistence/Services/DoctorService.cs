@@ -2,6 +2,7 @@
 using Application.DTOs.DoctorDTOs;
 using Application.Shared;
 using Domain.Entities;
+using Infrastructure.Services;
 using Microsoft.AspNetCore.Identity;
 using System.Net;
 
@@ -11,12 +12,12 @@ public class DoctorService : IDoctorService
 {
     private readonly UserManager<AppUser> _userManager;
     private readonly RoleManager<IdentityRole> _roleManager;
-    private readonly IFileUploadServices _fileUpload;
+    private readonly FileUploadService _fileUpload;
    // private readonly IAppEmailSender _emailSender;
 
     public DoctorService(UserManager<AppUser> userManager,
                          RoleManager<IdentityRole> roleManager,
-                         IFileUploadServices fileUpload)
+                         FileUploadService fileUpload)
                         // IAppEmailSender emailSender)
     {
         _userManager = userManager;
