@@ -9,8 +9,6 @@ public class MedicalService : BaseEntity
     public Department Department { get; set; }
 
     public Guid DoctorId { get; set; }
-    public Doctor Doctor { get; set; }
-
     // Relations
     public ICollection<QueueTicket> QueueTickets { get; set; }
     public ICollection<Doctor> Doctors { get; set; }
