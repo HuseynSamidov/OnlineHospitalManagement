@@ -14,16 +14,16 @@ public class QueueTicketService : IQueueTicketService
 {
     private readonly IQueueTicketRepository _queueTicketRepository;
     private readonly IPatientRepository _patientRepository;
-    private readonly IMedicalServiceRepository _medicalServiceRepository;
+    private readonly IProcedureRepository _procedureRepository;
 
     public QueueTicketService(
         IQueueTicketRepository queueTicketRepository,
         IPatientRepository patientRepository,
-        IMedicalServiceRepository medicalServiceRepository)
+        IProcedureRepository procedureRepository)
     {
         _queueTicketRepository = queueTicketRepository;
         _patientRepository = patientRepository;
-        _medicalServiceRepository = medicalServiceRepository;
+        _procedureRepository = procedureRepository;
     }
 
     public async Task<BaseResponse<QueueTicketGetDto>> GetByIdAsync(Guid id)
@@ -35,7 +35,7 @@ public class QueueTicketService : IQueueTicketService
         var dto = new QueueTicketGetDto(
             ticket.Id,
             ticket.PatientId,
-            ticket.ServiceId,
+            ticket.ProcedureId,
             ticket.Status,
             ticket.ScheduledAt,
             ticket.Number
@@ -60,7 +60,7 @@ public class QueueTicketService : IQueueTicketService
             );
         }
 
-        var service = await _medicalServiceRepository.GetByIdAsync(dto.MedicalServiceId);
+        var service = await _procedureRepository.GetByIdAsync(dto.MedicalServiceId);
         if (service == null)
             return new BaseResponse<QueueTicketGetDto>("Service not found", null, HttpStatusCode.NotFound);
 
@@ -73,7 +73,7 @@ public class QueueTicketService : IQueueTicketService
         {
             Id = Guid.NewGuid(),
             PatientId = dto.PatientId,
-            ServiceId = dto.MedicalServiceId,
+            ProcedureId = dto.MedicalServiceId,
             DoctorId = service.DoctorId,
             Number = lastTicket?.Number + 1 ?? 1,
             ScheduledAt = scheduledAt,
@@ -90,7 +90,7 @@ public class QueueTicketService : IQueueTicketService
         );
 
         var result = new QueueTicketGetDto(
-            ticket.Id, ticket.PatientId, ticket.ServiceId, ticket.Status, ticket.CreatedAt,ticket.Number
+            ticket.Id, ticket.PatientId, ticket.ProcedureId, ticket.Status, ticket.CreatedAt,ticket.Number
         );
 
         return new BaseResponse<QueueTicketGetDto>(
@@ -147,7 +147,7 @@ public class QueueTicketService : IQueueTicketService
         var tickets = await _queueTicketRepository.GetByFiltered(x => x.PatientId == patientId).ToListAsync();
 
         var result = tickets.Select(t => new QueueTicketGetDto(
-            t.Id, t.PatientId, t.ServiceId, t.Status, t.ScheduledAt, t.Number
+            t.Id, t.PatientId, t.ProcedureId, t.Status, t.ScheduledAt, t.Number
         ));
 
         return new BaseResponse<IEnumerable<QueueTicketGetDto>>("Tickets for patient", result, HttpStatusCode.OK);
@@ -158,7 +158,7 @@ public class QueueTicketService : IQueueTicketService
         var tickets = await _queueTicketRepository.GetTicketsByServiceAsync(medicalServiceId);
 
         var result = tickets.Select(t => new QueueTicketGetDto(
-            t.Id, t.PatientId, t.ServiceId, t.Status, t.ScheduledAt, t.Number
+            t.Id, t.PatientId, t.ProcedureId, t.Status, t.ScheduledAt, t.Number
         ));
 
         return new BaseResponse<IEnumerable<QueueTicketGetDto>>("Tickets for service", result, HttpStatusCode.OK);
@@ -171,7 +171,7 @@ public class QueueTicketService : IQueueTicketService
         ).ToListAsync();
 
         var result = tickets.Select(t => new QueueTicketGetDto(
-            t.Id, t.PatientId, t.ServiceId, t.Status, t.ScheduledAt, t.Number
+            t.Id, t.PatientId, t.ProcedureId, t.Status, t.ScheduledAt, t.Number
         ));
 
         return new BaseResponse<IEnumerable<QueueTicketGetDto>>("Active tickets", result, HttpStatusCode.OK);

@@ -14,7 +14,7 @@ public class Doctor : BaseEntity
     public string Specialization { get; set; }
 
     // Həkimin təqdim etdiyi tibbi xidmətlər
-    public ICollection<MedicalService> MedicalServices { get; set; } = new List<MedicalService>();
+    public ICollection<Procedure> MedicalServices { get; set; } = new List<Procedure>();
 
     // Həkimin qəbul növbələri
     public ICollection<QueueTicket> QueueTickets { get; set; } = new List<QueueTicket>();

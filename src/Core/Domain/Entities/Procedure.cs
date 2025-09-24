@@ -1,6 +1,6 @@
 ﻿namespace Domain.Entities;
 
-public class MedicalService : BaseEntity
+public class Procedure : BaseEntity
 {
     public string Name { get; set; }
     public string Description { get; set; }

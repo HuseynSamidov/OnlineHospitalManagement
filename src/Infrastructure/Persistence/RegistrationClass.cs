@@ -14,7 +14,7 @@ public static class RegistrationClass
         #region Repo
             services.AddScoped<IPatientRepository, PatientRepository>();
             services.AddScoped<IDoctorRepository, DoctorRepository>();
-            services.AddScoped<IMedicalServiceRepository, MedicalServiceRepository>();
+            services.AddScoped<IMedicalServiceRepository, ProcedureRepository>();
             services.AddScoped<IQueueTicketRepository, QueueTicketRepository>();
         #endregion
 

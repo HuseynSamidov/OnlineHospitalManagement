@@ -12,5 +12,5 @@ public class Department : BaseEntity
 
     // Bir Department-də çox həkim ola bilər
     public ICollection<Doctor> Doctors { get; set; }
-    public ICollection<MedicalService> MedicalService { get; set; }
+    public ICollection<Procedure> Procedure { get; set; }
 }

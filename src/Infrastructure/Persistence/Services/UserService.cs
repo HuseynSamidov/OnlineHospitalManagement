@@ -85,11 +85,12 @@ public class UserService : IUserService
         await _context.SaveChangesAsync();
 
         // 5. Email təsdiqi linki (SMTP ilə sonradan göndəriləcək)
-        var emailToken = await _userManager.GenerateEmailConfirmationTokenAsync(newUser);
-        var emailConfirmLink = $"https://localhost:7046/api/Users/ConfirmEmail?userId={newUser.Id}&token={HttpUtility.UrlEncode(emailToken)}";
+        //var emailToken = await _userManager.GenerateEmailConfirmationTokenAsync(newUser);
+        //var emailConfirmLink = $"https://localhost:7046/api/Users/ConfirmEmail?userId={newUser.Id}&token={HttpUtility.UrlEncode(emailToken)}";
 
-        Console.WriteLine("Confirm email link: " + emailConfirmLink);
-
+        //Console.WriteLine("Confirm email link: " + emailConfirmLink);
+        var confirmEmail = await GetEmailConfirmLink(newUser);
+        
         // 6. JWT token yaradılır
         var tokenResponse = await GenerateJwtToken(newUser);
 
@@ -108,10 +109,10 @@ public class UserService : IUserService
             return new BaseResponse<TokenResponse>("Invalid email or password", HttpStatusCode.Unauthorized);
 
         // 3. Email təsdiqlənməyibsə (əgər şərt qoymaq istəsən)
-        //if (!user.EmailConfirmed)
-        //{
-        //    return new BaseResponse<TokenResponse>("Please confirm your email before logging in", HttpStatusCode.Forbidden);
-        //}
+        if (!user.EmailConfirmed)
+        {
+            return new BaseResponse<TokenResponse>("Please confirm your email before logging in", HttpStatusCode.Forbidden);
+        }
 
         // 4. JWT token yaradılır
         var tokenResponse = await GenerateJwtToken(user);
@@ -368,7 +369,15 @@ public class UserService : IUserService
         rng.GetBytes(randomBytes);
         return Convert.ToBase64String(randomBytes);
     }
+    private async Task<string> GetEmailConfirmLink(AppUser user)
+    {
+        var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+        var link = $"https://localhost:7046/api/Users/ConfirmEmail?userId={user.Id}&token=" +
+            $"{HttpUtility.UrlEncode(token)}";
 
+        Console.WriteLine("Confirm email link : " + token);
+        return link;
+    }
     private ClaimsPrincipal? GetPrincipalFromExpiredToken(string token)
     {
         var tokenValidationParameters = new TokenValidationParameters
