@@ -1,4 +1,6 @@
 ﻿using Application.Abstracts.Services;
+using Application.Abstracts.Shared;
+using Application.DTOs.EmailDTOs;
 using Application.DTOs.UserDTOs;
 using Application.Shared;
 using Application.Shared.Settings;
@@ -26,6 +28,7 @@ public class UserService : IUserService
     private readonly JWTSettings _jwtSettings;
     private readonly AppDbContext _context;
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly EmailPublisher _emailPublisher;
 
     public UserService(
         UserManager<AppUser> userManager,
@@ -33,7 +36,8 @@ public class UserService : IUserService
         RoleManager<IdentityRole> roleManager,
           AppDbContext context,
           IHttpContextAccessor httpContextAccessor,
-        IOptions<JWTSettings> jwtSettings)
+        IOptions<JWTSettings> jwtSettings,
+        EmailPublisher emailPublisher)
     {
         _userManager = userManager;
         _signInManager = signInManager;
@@ -41,6 +45,7 @@ public class UserService : IUserService
         _jwtSettings = jwtSettings.Value;
         _context = context;
         _httpContextAccessor = httpContextAccessor;
+        _emailPublisher = emailPublisher;
     }
 
     public async Task<BaseResponse<TokenResponse>> RegisterAsync(RegisterDto dto)
@@ -59,13 +64,18 @@ public class UserService : IUserService
             SecurityStamp = Guid.NewGuid().ToString()
         };
 
-        var createResult = await _userManager.CreateAsync(newUser, dto.Password);
-        if (!createResult.Succeeded)
-        {
-            var errors = string.Join("; ", createResult.Errors.Select(e => e.Description));
-            return new BaseResponse<TokenResponse>($"User creation failed: {errors}", HttpStatusCode.BadRequest);
-        }
+        IdentityResult identityResult = await _userManager.CreateAsync(newUser, dto.Password);
 
+        if (!identityResult.Succeeded)
+        {
+            var errors = identityResult.Errors;
+            StringBuilder errorMessage = new StringBuilder();
+            foreach (var error in errors)
+            {
+                errorMessage.Append(error.Description + ";");
+            }
+            return new(errorMessage.ToString(), HttpStatusCode.BadRequest);
+        }
         // 3. İstifadəçiyə "Patient" rolu verilir
         const string roleName = "Patient";
         if (!await _roleManager.RoleExistsAsync(roleName))
@@ -84,26 +94,26 @@ public class UserService : IUserService
         _context.Patients.Add(patient);
         await _context.SaveChangesAsync();
 
-        // 5. Email təsdiqi linki (SMTP ilə sonradan göndəriləcək)
-        //var emailToken = await _userManager.GenerateEmailConfirmationTokenAsync(newUser);
-        //var emailConfirmLink = $"https://localhost:7046/api/Users/ConfirmEmail?userId={newUser.Id}&token={HttpUtility.UrlEncode(emailToken)}";
-
-        //Console.WriteLine("Confirm email link: " + emailConfirmLink);
         var confirmEmail = await GetEmailConfirmLink(newUser);
-        
-        // 6. JWT token yaradılır
-        var tokenResponse = await GenerateJwtToken(newUser);
 
-        return new BaseResponse<TokenResponse>("User registered successfully", tokenResponse, HttpStatusCode.Created);
+        await _emailPublisher.PublishAsync(new EmailMessageDto
+        {
+            To = dto.Email,
+            Subject = "Confirm your account",
+            Body = $"<p>Hello {dto.FullName},</p>" +
+                $"<p>Click the link below to confirm your account:</p>" +
+                $"<a href='{confirmEmail}'>Confirm Email</a>"
+        });
+        return new BaseResponse<TokenResponse>(
+            "User registered successfully. Please check your email to confirm.",
+            HttpStatusCode.Created);
     }
     public async Task<BaseResponse<TokenResponse>> LoginAsync(LoginDto dto)
     {
-        // 1. İstifadəçi mövcuddurmu
         var user = await _userManager.FindByEmailAsync(dto.Email);
         if (user == null)
             return new BaseResponse<TokenResponse>("Invalid email or password", HttpStatusCode.Unauthorized);
 
-        // 2. Parol yoxlanılır
         var result = await _signInManager.CheckPasswordSignInAsync(user, dto.Password, false);
         if (!result.Succeeded)
             return new BaseResponse<TokenResponse>("Invalid email or password", HttpStatusCode.Unauthorized);
