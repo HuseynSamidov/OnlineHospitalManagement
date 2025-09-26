@@ -1,6 +1,5 @@
 ﻿using Application.Abstracts.Services;
 using Application.DTOs.EmailDTOs;
-using Microsoft.AspNetCore.Connections;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using RabbitMQ.Client;

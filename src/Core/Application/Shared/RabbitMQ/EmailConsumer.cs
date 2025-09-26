@@ -1,15 +1,12 @@
-﻿using Application.DTOs.EmailDTOs;
+﻿using Application.Abstracts.Services;
+using Application.DTOs.EmailDTOs;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Application.Shared.RabbitMQ;
 
@@ -43,7 +40,7 @@ public class EmailConsumer : BackgroundService
             if (message != null)
             {
                 using var scope = _serviceProvider.CreateScope();
-                var emailService = scope.ServiceProvider.GetRequiredService<IAppEmailSender>();
+                var emailService = scope.ServiceProvider.GetRequiredService<IAppEmailService>();
 
                 await emailService.SendEmailAsync(message.To, message.Subject, message.Body);
             }

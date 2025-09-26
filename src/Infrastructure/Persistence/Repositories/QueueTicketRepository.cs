@@ -47,7 +47,7 @@ public class QueueTicketRepository : Repository<QueueTicket>, IQueueTicketReposi
             query = query.AsNoTracking();
 
         return await query
-            .Where(q => q.ServiceId == serviceId)
+            .Where(q => q.ProcedureId == serviceId)
             .OrderByDescending(q => q.ScheduledAt)
             .FirstOrDefaultAsync();
     }
@@ -59,9 +59,9 @@ public class QueueTicketRepository : Repository<QueueTicket>, IQueueTicketReposi
             query = query.AsNoTracking();
 
         if (status.HasValue)
-            query = query.Where(q => q.ServiceId == serviceId && q.Status == status.Value);
+            query = query.Where(q => q.ProcedureId == serviceId && q.Status == status.Value);
         else
-            query = query.Where(q => q.ServiceId == serviceId);
+            query = query.Where(q => q.ProcedureId == serviceId);
 
         return await query.ToListAsync();
     }

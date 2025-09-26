@@ -71,6 +71,9 @@ builder.Services.Configure<JWTSettings>(builder.Configuration.GetSection("JWTSet
 
 var jwtSettings = builder.Configuration.GetSection("JWTSettings").Get<JWTSettings>();
 
+var emailSettings = builder.Configuration.GetSection("EmailSettings").Get<EmailSettings>();
+
+
 builder.Services.Configure<CloudinarySettings>(
     builder.Configuration.GetSection("CloudinarySettings"));
 
@@ -116,7 +119,7 @@ builder.Services.RegisterService();
 
 #region Hangfire
 builder.Services.AddHangfire(x =>
-    x.UseSqlServerStorage(builder.Configuration.GetConnectionString("DefaultConnection")));
+    x.UseSqlServerStorage(builder.Configuration.GetConnectionString("Default")));
 builder.Services.AddHangfireServer();
 
 #endregion
