@@ -3,13 +3,9 @@ using Application.DTOs.EmailDTOs;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using RabbitMQ.Client;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
-namespace Persistence.Services;
+namespace Application.Abstracts.Shared;
 
 //public class EmailPublisher : IEmailPublisher
 //{

@@ -2,7 +2,7 @@
 
 namespace Application.Abstracts.Services;
 
-public interface IEmailPublisher
-{
-    Task PublishAsync(EmailMessageDto message);
-}
+//public interface IEmailPublisher
+//{
+//    Task PublishAsync(EmailMessageDto message);
+//}

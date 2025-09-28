@@ -11,6 +11,6 @@ public record DoctorRegisterDto
     public Guid MedicalServiceId { get; set; }
 
     // Mütləq sənəd (məs: pdf, jpg və ya scan edilmiş şəkil)
-    public IFormFile Document { get; set; }
+    public IFormFile Document { get; set; } = null!;
 }
 

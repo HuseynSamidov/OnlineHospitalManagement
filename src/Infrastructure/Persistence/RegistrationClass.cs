@@ -24,9 +24,10 @@ public static class RegistrationClass
         services.AddScoped<IQueueTicketService,QueueTicketService>();
         services.AddScoped<IDoctorService,DoctorService>();
         services.AddScoped<FileUploadService>();
-        services.AddSingleton<EmailPublisher>();
-        services.AddSingleton<IAppEmailService,EmailService>();
-        services.AddHostedService<EmailConsumer>();
+        //services.AddSingleton<EmailPublisher>();
+        services.AddScoped<IAppEmailService,EmailService>();
+        //services.AddHostedService<EmailConsumer>();
+        //services.AddHostedService<EmailConsumerService>();
         #endregion
     }
 }

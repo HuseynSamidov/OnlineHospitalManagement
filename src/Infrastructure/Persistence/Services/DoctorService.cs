@@ -59,14 +59,9 @@ public class DoctorService : IDoctorService
 
         await _userManager.AddToRoleAsync(doctor, "Doctor");
 
-        // həkimə parol göndərilir
-        //await _emailSender.SendEmailAsync(dto.Email,
-        //    "Doctor Account Created",
-        //    $"Salam {dto.FullName}, sizin həkim hesabınız yaradıldı. Login parolunuz: {password}");
 
         // uğurlu cavab
         return new BaseResponse<string>(
-            "Doctor account created successfully",
             "Doctor account created successfully",
             HttpStatusCode.Created
         );

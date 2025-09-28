@@ -1,11 +1,23 @@
-﻿namespace Application.DTOs.UserDTOs;
+﻿using System.ComponentModel.DataAnnotations;
 
-public record RegisterDto(
-    string FullName,
-    string Email,
-    string Password,
-    DateTime DateOfBirth, // artıq null deyil
-    string Gender
-);
+namespace Application.DTOs.UserDTOs;
+
+public class RegisterDto
+{
+    [Required]
+    public string Email { get; set; }
+
+    [Required]
+    public string Password { get; set; }
+
+    [Required]
+    public string FullName { get; set; }
+
+    [Required]
+    public DateTime DateOfBirth { get; set; }
+
+    [Required]
+    public string Gender { get; set; }
+}
 
 

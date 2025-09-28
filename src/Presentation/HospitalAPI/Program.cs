@@ -1,11 +1,14 @@
+﻿using Application.Abstracts.Services;
 using Application.Shared;
 using Application.Shared.Helpers;
 using Application.Shared.Settings;
 using Domain.Entities;
 using Hangfire;
+using Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Persistence;
@@ -16,7 +19,12 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(opt =>
+    {
+        opt.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+    });
+
 builder.Services.AddEndpointsApiExplorer();
 //builder.Services.AddSwaggerGen();
 
@@ -24,7 +32,7 @@ builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "API", Version = "v1" });
 
-    // JWT Authentication ���n Swagger konfiqurasiyas?
+    // JWT Authentication üçün Swagger konfiqurasiyas?
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -57,6 +65,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
 
 
+
+
 builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
 {
     options.Password.RequiredLength = 8;
@@ -71,7 +81,13 @@ builder.Services.Configure<JWTSettings>(builder.Configuration.GetSection("JWTSet
 
 var jwtSettings = builder.Configuration.GetSection("JWTSettings").Get<JWTSettings>();
 
-var emailSettings = builder.Configuration.GetSection("EmailSettings").Get<EmailSettings>();
+// 1. EmailSettings konfiqurasiyasını oxu
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+
+// 2. EmailService-i IAppEmailService olaraq register et
+
+
+//builder.Services.Configure<RabbitMQ>
 
 
 builder.Services.Configure<CloudinarySettings>(
@@ -94,10 +110,10 @@ builder.Services.AddAuthentication(options =>
         ValidateAudience = true,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-        ValidIssuer = builder.Configuration["JWT:Issuer"],
-        ValidAudience = builder.Configuration["JWT:Audience"],
+        ValidIssuer = builder.Configuration["JWTSettings:Issuer"],
+        ValidAudience = builder.Configuration["JWTSettings:Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(builder.Configuration["JWT:Key"]))
+            Encoding.UTF8.GetBytes(builder.Configuration["JWTSettings:SecretKey"]))
     };
 });
 

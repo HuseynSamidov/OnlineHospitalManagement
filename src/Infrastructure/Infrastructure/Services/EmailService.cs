@@ -2,6 +2,7 @@
 
 using Application.Abstracts.Services;
 using Application.Shared.Settings;
+using Microsoft.Extensions.Options;
 using System.Net;
 using System.Net.Mail;
 
@@ -10,11 +11,10 @@ public class EmailService : IAppEmailService
 {
     private readonly EmailSettings _emailSettings;
 
-    public EmailService(EmailSettings emailSettings)
+    public EmailService(IOptions<EmailSettings> emailOptions)
     {
-        _emailSettings = emailSettings;
+        _emailSettings = emailOptions.Value;
     }
-
     public async Task SendEmailAsync(string toEmail, string subject, string body)
     {
         using var client = new SmtpClient(_emailSettings.SmtpServer, _emailSettings.SmtpPort)

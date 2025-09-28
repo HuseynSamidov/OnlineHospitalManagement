@@ -1,5 +1,4 @@
 ﻿using Application.Abstracts.Services;
-using Application.Abstracts.Shared;
 using Application.DTOs.EmailDTOs;
 using Application.DTOs.UserDTOs;
 using Application.Shared;
@@ -7,6 +6,7 @@ using Application.Shared.Settings;
 using Domain.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -28,7 +28,8 @@ public class UserService : IUserService
     private readonly JWTSettings _jwtSettings;
     private readonly AppDbContext _context;
     private readonly IHttpContextAccessor _httpContextAccessor;
-    private readonly EmailPublisher _emailPublisher;
+    private readonly IAppEmailService _appEmailService;
+    //private readonly EmailPublisher _emailPublisher;
 
     public UserService(
         UserManager<AppUser> userManager,
@@ -36,16 +37,18 @@ public class UserService : IUserService
         RoleManager<IdentityRole> roleManager,
           AppDbContext context,
           IHttpContextAccessor httpContextAccessor,
-        IOptions<JWTSettings> jwtSettings,
-        EmailPublisher emailPublisher)
+        IOptions<JWTSettings> jwtSetting,
+        IAppEmailService appEmailService)
+    /*EmailPublisher emailPublisher*/
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _roleManager = roleManager;
-        _jwtSettings = jwtSettings.Value;
+        _jwtSettings = jwtSetting.Value;
         _context = context;
         _httpContextAccessor = httpContextAccessor;
-        _emailPublisher = emailPublisher;
+        _appEmailService = appEmailService;
+        //_emailPublisher = emailPublisher;
     }
 
     public async Task<BaseResponse<TokenResponse>> RegisterAsync(RegisterDto dto)
@@ -61,8 +64,10 @@ public class UserService : IUserService
             UserName = dto.Email,
             Email = dto.Email,
             FullName = dto.FullName,
-            SecurityStamp = Guid.NewGuid().ToString()
+            SecurityStamp = Guid.NewGuid().ToString(),
+            DocumentPath = string.Empty // boş string veririk
         };
+
 
         IdentityResult identityResult = await _userManager.CreateAsync(newUser, dto.Password);
 
@@ -94,19 +99,34 @@ public class UserService : IUserService
         _context.Patients.Add(patient);
         await _context.SaveChangesAsync();
 
-        var confirmEmail = await GetEmailConfirmLink(newUser);
-
-        await _emailPublisher.PublishAsync(new EmailMessageDto
+        if (string.IsNullOrWhiteSpace(newUser.Email))
         {
-            To = dto.Email,
-            Subject = "Confirm your account",
-            Body = $"<p>Hello {dto.FullName},</p>" +
+            return new BaseResponse<TokenResponse>(
+                "Email cannot be empty. Registration failed.",
+                HttpStatusCode.BadRequest);
+        }
+
+        var confirmEmailLink = await GetEmailConfirmLink(newUser);
+
+        // SMTP ilə email göndər
+        if (string.IsNullOrWhiteSpace(dto.Email))
+        {
+            return new BaseResponse<TokenResponse>(
+            "User can't registered, something is wrong.",
+            HttpStatusCode.BadRequest);
+
+        }
+        await _appEmailService.SendEmailAsync(newUser.Email,
+                "Confirm your account",
+                $"<p>Hello {newUser.FullName},</p>" +
                 $"<p>Click the link below to confirm your account:</p>" +
-                $"<a href='{confirmEmail}'>Confirm Email</a>"
-        });
+                $"<a href='{confirmEmailLink}'>Confirm Email</a>");
+
         return new BaseResponse<TokenResponse>(
-            "User registered successfully. Please check your email to confirm.",
-            HttpStatusCode.Created);
+        "User registered successfully. For login, please check your email to confirm.",
+        HttpStatusCode.Created
+        );
+
     }
     public async Task<BaseResponse<TokenResponse>> LoginAsync(LoginDto dto)
     {
