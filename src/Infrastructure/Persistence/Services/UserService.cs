@@ -402,10 +402,13 @@ public class UserService : IUserService
     private async Task<string> GetEmailConfirmLink(AppUser user)
     {
         var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-        var link = $"https://localhost:7046/api/Users/ConfirmEmail?userId={user.Id}&token=" +
+        var link = $"https://localhost:7149/api/User/ConfirmEmail?userId={user.Id}&token=" +
             $"{HttpUtility.UrlEncode(token)}";
+        var decodeToken = HttpUtility.UrlDecode(token);
+        var result = await _userManager.ConfirmEmailAsync(user,token);
 
-        Console.WriteLine("Confirm email link : " + token);
+
+        Console.WriteLine("Confirm email link : " + decodeToken);
         return link;
     }
     private ClaimsPrincipal? GetPrincipalFromExpiredToken(string token)
