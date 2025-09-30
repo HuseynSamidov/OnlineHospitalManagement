@@ -40,17 +40,19 @@ public class QueueTicketRepository : Repository<QueueTicket>, IQueueTicketReposi
         return await query.ToListAsync();
     }
 
-    public async Task<QueueTicket?> GetLastTicketByServiceAsync(Guid serviceId, bool isTracking = false)
+    public async Task<QueueTicket?> GetLastTicketByDoctorAsync(Guid doctorId, Guid serviceId, bool isTracking = false)
     {
         var query = _context.QueueTickets.AsQueryable();
+
         if (!isTracking)
             query = query.AsNoTracking();
 
         return await query
-            .Where(q => q.ProcedureId == serviceId)
+            .Where(q => q.ProcedureId == serviceId && q.DoctorId == doctorId)
             .OrderByDescending(q => q.ScheduledAt)
             .FirstOrDefaultAsync();
     }
+
 
     public async Task<List<QueueTicket>> GetTicketsByServiceAsync(Guid serviceId, QueueStatus? status = null, bool isTracking = false)
     {

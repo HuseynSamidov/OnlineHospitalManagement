@@ -12,7 +12,7 @@ public interface IQueueTicketService
     Task ProcessMissedTicketAsync(Guid ticketId);
 
     Task<BaseResponse<IEnumerable<QueueTicketGetDto>>> GetByPatientIdAsync(Guid patientId);
-    Task<BaseResponse<IEnumerable<QueueTicketGetDto>>> GetByMedicalServiceIdAsync(Guid medicalServiceId);
+    Task<BaseResponse<IEnumerable<QueueTicketGetDto>>> GetByProcedureIdAsync(Guid medicalServiceId);
 
     // Aktiv ticket-lər (Waiting və Called olanlar)
     Task<BaseResponse<IEnumerable<QueueTicketGetDto>>> GetActiveTicketsAsync();

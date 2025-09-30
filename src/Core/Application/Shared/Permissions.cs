@@ -42,8 +42,25 @@ public static class Permissions
             GetAll
         };
     }
+    public static class Category
+    {
+        public const string MainCreate = "Category.MainCreate";
+        public const string SubCreate = "Category.SubCreate";
+        public const string MainUpdate = "Category.MainUpdate";
+        public const string Delete = "Category.Delete";
+        public const string GetAll = "Category.GetAll";
+        public const string GetDetail = "Category.GetDetail";
 
+        public static List<string> All = new()
+        {
+            MainCreate,
+            SubCreate,
+            MainUpdate,
+            Delete,
+            GetAll,
+            GetDetail
+        };
 
-
+    }
 
 }

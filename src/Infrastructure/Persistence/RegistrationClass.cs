@@ -17,17 +17,21 @@ public static class RegistrationClass
             services.AddScoped<IDoctorRepository, DoctorRepository>();
             services.AddScoped<IDepartmentRepository, DepartmentRepository>();
             services.AddScoped<IQueueTicketRepository, QueueTicketRepository>();
+            services.AddScoped<IDepartmentRepository, DepartmentRepository>();
+
         #endregion
 
         #region Service
         services.AddScoped<IUserService,UserService>();
         services.AddScoped<IQueueTicketService,QueueTicketService>();
         services.AddScoped<IDoctorService,DoctorService>();
+        services.AddScoped<ICategoryService,CategoryService>();
         services.AddScoped<FileUploadService>();
-        //services.AddSingleton<EmailPublisher>();
         services.AddScoped<IAppEmailService,EmailService>();
         //services.AddHostedService<EmailConsumer>();
         //services.AddHostedService<EmailConsumerService>();
+        //services.AddSingleton<EmailPublisher>();
+
         #endregion
     }
 }

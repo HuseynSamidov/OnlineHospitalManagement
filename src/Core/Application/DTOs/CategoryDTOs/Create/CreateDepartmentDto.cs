@@ -1,4 +1,4 @@
-﻿namespace Application.DTOs.CategoryDTOs;
+﻿namespace Application.DTOs.CategoryDTOs.Create;
 
 public class CreateDepartmentDto
 {

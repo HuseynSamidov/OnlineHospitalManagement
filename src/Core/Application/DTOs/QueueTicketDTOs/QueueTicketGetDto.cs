@@ -10,3 +10,4 @@ QueueStatus Status,
 DateTime? CreatedAt,
  int Number
 );
+
