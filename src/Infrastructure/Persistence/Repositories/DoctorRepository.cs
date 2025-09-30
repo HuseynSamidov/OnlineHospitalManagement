@@ -20,17 +20,13 @@ namespace Persistence.Repositories
         }
 
         // Xüsusi metod: Doctor ilə birlikdə xidmətləri və department-i gətir
-        public async Task<Doctor?> GetDoctorWithServicesAsync(Guid id, bool isTracking = false)
+        public async Task<Department?> GetDoctorWithServicesAsync(Guid doctorId)
         {
-            var query = _context.Doctors
-                .Include(d => d.MedicalServices)
-                .Include(d => d.Department)
-                .Where(d => d.Id == id);
-
-            if (!isTracking)
-                query = query.AsNoTracking();
-
-            return await query.FirstOrDefaultAsync();
+            return await _context.Doctors
+                .Where(d=>d.Id == doctorId)
+                .Include(d=>d.Procedure)
+                .Select(d => d.Procedure)
+                .FirstOrDefaultAsync();
         }
     }
 }

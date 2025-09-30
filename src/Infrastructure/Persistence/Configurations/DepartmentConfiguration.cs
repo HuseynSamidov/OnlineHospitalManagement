@@ -12,13 +12,19 @@ namespace YourProject.Infrastructure.Persistence.Configurations
 
             builder.Property(d => d.Name)
                    .IsRequired()
-                   .HasMaxLength(100);
+                   .HasMaxLength(50);
 
             // One-to-many: Department -> Doctors
             builder.HasMany(d => d.Doctors)
                    .WithOne(doc => doc.Department)
                    .HasForeignKey(doc => doc.DepartmentId)
                    .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(c => c.ParentCategory)
+             .WithMany(c => c.Procedures)
+             .HasForeignKey(c => c.ParentCategoryId)
+             .OnDelete(DeleteBehavior.Restrict);
+
         }
     }
 }

@@ -12,8 +12,8 @@ public class AppDbContext : IdentityDbContext<AppUser>
     public DbSet<Patient> Patients { get; set; }
     public DbSet<Doctor> Doctors { get; set; }
     public DbSet<Department> Departments { get; set; }
-    public DbSet<Procedure> Procedures { get; set; }
     public DbSet<QueueTicket> QueueTickets { get; set; }
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

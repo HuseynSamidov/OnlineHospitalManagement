@@ -14,16 +14,16 @@ public class QueueTicketService : IQueueTicketService
 {
     private readonly IQueueTicketRepository _queueTicketRepository;
     private readonly IPatientRepository _patientRepository;
-    private readonly IProcedureRepository _procedureRepository;
+    private readonly IDepartmentRepository _departmentRepository;
 
     public QueueTicketService(
         IQueueTicketRepository queueTicketRepository,
         IPatientRepository patientRepository,
-        IProcedureRepository procedureRepository)
+        IDepartmentRepository departmentRepository)
     {
         _queueTicketRepository = queueTicketRepository;
         _patientRepository = patientRepository;
-        _procedureRepository = procedureRepository;
+        _departmentRepository = departmentRepository;
     }
 
     public async Task<BaseResponse<QueueTicketGetDto>> GetByIdAsync(Guid id)
@@ -60,7 +60,7 @@ public class QueueTicketService : IQueueTicketService
             );
         }
 
-        var service = await _procedureRepository.GetByIdAsync(dto.MedicalServiceId);
+        var service = await _departmentRepository.GetByIdAsync(dto.MedicalServiceId);
         if (service == null)
             return new BaseResponse<QueueTicketGetDto>("Service not found", null, HttpStatusCode.NotFound);
 

@@ -10,11 +10,10 @@ public class Doctor : BaseEntity
     public Guid DepartmentId { get; set; }
     public Department Department { get; set; }
 
+    public Guid? ProcedureId { get; set; }
+    public Department? Procedure { get; set; }
     // İxtisası (məsələn: kardioloq, neyrocərrah və s.)
     public string Specialization { get; set; }
-
-    // Həkimin təqdim etdiyi tibbi xidmətlər
-    public ICollection<Procedure> MedicalServices { get; set; } = new List<Procedure>();
 
     // Həkimin qəbul növbələri
     public ICollection<QueueTicket> QueueTickets { get; set; } = new List<QueueTicket>();

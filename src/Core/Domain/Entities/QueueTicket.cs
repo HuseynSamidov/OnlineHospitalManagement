@@ -11,7 +11,7 @@ public class QueueTicket : BaseEntity
     public Doctor Doctor { get; set; }
 
     public Guid ProcedureId { get; set; }
-    public Procedure Procedure { get; set; }
+    public Department Procedure { get; set; }
 
     public int Number { get; set; } // Sıradakı nömrəsi
     public DateTime ScheduledAt { get; set; } //ne zaman pasient daxil olmalidir

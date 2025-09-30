@@ -34,7 +34,7 @@ public class QueueTicketConfiguration : IEntityTypeConfiguration<QueueTicket>
 
         // MedicalService - QueueTickets
         builder.HasOne(q => q.Procedure)
-            .WithMany(s => s.QueueTickets)
+            .WithMany(s => s.Tickets)
             .HasForeignKey(q => q.ProcedureId)
             .OnDelete(DeleteBehavior.Cascade); // ✅ Burada Cascade qalsın
 
