@@ -13,7 +13,6 @@ public class DoctorService : IDoctorService
     private readonly UserManager<AppUser> _userManager;
     private readonly RoleManager<IdentityRole> _roleManager;
     private readonly FileUploadService _fileUpload;
-   // private readonly IAppEmailSender _emailSender;
 
     public DoctorService(UserManager<AppUser> userManager,
                          RoleManager<IdentityRole> roleManager,

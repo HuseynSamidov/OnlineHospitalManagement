@@ -14,7 +14,5 @@ public class Doctor : BaseEntity
     public Department? Procedure { get; set; }
     // İxtisası (məsələn: kardioloq, neyrocərrah və s.)
     public string Specialization { get; set; }
-
-    // Həkimin qəbul növbələri
     public ICollection<QueueTicket> QueueTickets { get; set; } = new List<QueueTicket>();
 }
