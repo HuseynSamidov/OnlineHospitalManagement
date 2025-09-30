@@ -1,6 +1,6 @@
 ﻿namespace Application.DTOs.CategoryDTOs.Create;
 
-public class UpdateProcedureDto
+public class CreateProcedureDto
 {
     public Guid DepartmentId { get; set; }
     public string Name { get; set; } = null!;

@@ -29,7 +29,7 @@ public class CategoryController : ControllerBase
 
     [HttpPost]
     [Authorize(Policy = Permissions.Category.SubCreate)]
-    public async Task<IActionResult> CreateProcedure([FromBody] UpdateProcedureDto dto)
+    public async Task<IActionResult> CreateProcedure([FromBody] CreateProcedureDto dto)
     {
         var result = await _categoryService.CreateProcedureCategory(dto);
         return StatusCode((int)result.StatusCode, result);
@@ -43,6 +43,17 @@ public class CategoryController : ControllerBase
         return StatusCode((int)result.StatusCode, result);
     }
 
+    [HttpPut]
+    [Authorize(Policy = Permissions.Category.MainUpdate)]
+    public async Task<IActionResult> UpdateProcedure([FromBody] UpdateProcedureDto dto)
+    {
+        var result = await _categoryService.UpdateProcedureAsync(dto);
+        return StatusCode((int)result.StatusCode, result);
+    }
+
+
+
+
     [HttpDelete]
     [Authorize(Policy = Permissions.Category.Delete)]
     public async Task<IActionResult> DeleteDepartment([FromBody] DeleteDepartmentDto dto)
@@ -50,5 +61,14 @@ public class CategoryController : ControllerBase
         var result = await _categoryService.DeleteDepartmentAsync(dto);
         return StatusCode((int)result.StatusCode, result);
     }
+
+    [HttpDelete]
+    [Authorize(Policy = Permissions.Category.Delete)]
+    public async Task<IActionResult> DeleteProcedure([FromBody] DeleteProcedureDto dto)
+    {
+        var result = await _categoryService.DeleteProcedureAsync(dto);
+        return StatusCode((int)result.StatusCode, result);
+    }
+
 
 }

@@ -8,7 +8,15 @@ namespace Application.Abstracts.Services;
 public interface ICategoryService
 {
     Task<BaseResponse<string>> CreateDepartmentCategory(CreateDepartmentDto dto);
-    Task<BaseResponse<string>> CreateProcedureCategory(UpdateProcedureDto dto);
+    Task<BaseResponse<string>> CreateProcedureCategory(CreateProcedureDto dto);
+
+
     Task<BaseResponse<string>> UpdateDepartmentAsync(UpdateDepartmentDto dto);
+    Task<BaseResponse<string>> UpdateProcedureAsync(UpdateProcedureDto dto);
+
     Task<BaseResponse<string>> DeleteDepartmentAsync(DeleteDepartmentDto dto);
+    Task<BaseResponse<string>> DeleteProcedureAsync(DeleteProcedureDto dto);
+
+
+
 }

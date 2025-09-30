@@ -41,7 +41,7 @@ public class CategoryService : ICategoryService
         await _departmentRepository.SaveChangeAsync();
         return new("Department created succesfully", HttpStatusCode.Created);
     }
-    public async Task<BaseResponse<string>> CreateProcedureCategory(UpdateProcedureDto dto)
+    public async Task<BaseResponse<string>> CreateProcedureCategory(CreateProcedureDto dto)
     {
         var parentDepartment = await _departmentRepository.GetByIdAsync(dto.DepartmentId);
         if (parentDepartment is null)
@@ -73,6 +73,22 @@ public class CategoryService : ICategoryService
         await _departmentRepository.SaveChangeAsync();
         return new("Department updated succesfully", HttpStatusCode.OK);
     }
+    public async Task<BaseResponse<string>> UpdateProcedureAsync(UpdateProcedureDto dto)
+    {
+        var procedure = await _departmentRepository.GetByIdAsync(dto.Id);
+        if (procedure is null)
+            return new("Procedure cannot found", HttpStatusCode.NotFound);
+
+        procedure.Name = dto.Name;
+        procedure.Description = dto.Description;
+
+        _departmentRepository.Update(procedure);
+
+        await _departmentRepository.SaveChangeAsync();
+
+        return new("Procedure updated succesfully", HttpStatusCode.OK);
+
+    }
     public async Task<BaseResponse<string>> DeleteDepartmentAsync(DeleteDepartmentDto dto)
     {
         var department = await _departmentRepository.GetByIdAsync(dto.Id);
@@ -99,4 +115,17 @@ public class CategoryService : ICategoryService
         return new("Department deleted succesfully", HttpStatusCode.OK);
 
     }
+    public async Task<BaseResponse<string>> DeleteProcedureAsync(DeleteProcedureDto dto)
+    {
+        var procedure = await _departmentRepository.GetByIdAsync(dto.Id);
+
+        if(procedure is null)
+            return new("Procedure does not exist",HttpStatusCode.NotFound);
+
+        _departmentRepository .Delete(procedure);
+        await _departmentRepository.SaveChangeAsync();
+
+        return new("Procedure deleted succesfully", HttpStatusCode.OK);
+    }
+    
 }
