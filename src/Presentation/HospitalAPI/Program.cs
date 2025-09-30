@@ -1,8 +1,11 @@
 ﻿using Application.Abstracts.Services;
+using Application.DTOs.CategoryDTOs.Create;
 using Application.Shared;
 using Application.Shared.Helpers;
 using Application.Shared.Settings;
 using Domain.Entities;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Hangfire;
 using Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -64,7 +67,10 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
 
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddFluentValidationClientsideAdapters();
 
+builder.Services.AddValidatorsFromAssembly(typeof(CreateDepartmentDto).Assembly);
 
 
 builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
