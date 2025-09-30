@@ -18,12 +18,10 @@ public class DoctorService : IDoctorService
     public DoctorService(UserManager<AppUser> userManager,
                          RoleManager<IdentityRole> roleManager,
                          FileUploadService fileUpload)
-                        // IAppEmailSender emailSender)
     {
         _userManager = userManager;
         _roleManager = roleManager;
         _fileUpload = fileUpload;
-      // _emailSender = emailSender;
     }
 
     public async Task<BaseResponse<string>> CreateDoctorAsync(DoctorRegisterDto dto)

@@ -52,14 +52,6 @@ public class QueueTicketController : ControllerBase
         return StatusCode((int)result.StatusCode, result);
     }
 
-    [HttpGet("service/{serviceId}")]
-    [Authorize(Policy = Permissions.QueueTicket.GetAll)]
-    public async Task<IActionResult> GetByMedicalServiceIdAsync(Guid serviceId)
-    {
-        var result = await _queueTicketService.GetByMedicalServiceIdAsync(serviceId);
-        return StatusCode((int)result.StatusCode, result);
-    }
-
     [HttpGet("active tickets")]
     [Authorize(Policy = Permissions.QueueTicket.GetAll)]
     public async Task<IActionResult> GetActiveTicketsAsync()
